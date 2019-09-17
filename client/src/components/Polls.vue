@@ -21,7 +21,8 @@
             <tr v-for="(poll, index) in polls" :key="index">
               <td>{{ poll.question.substr(-1) == '?' ? poll.question : poll.question + '?'  }}
                 <ul class='list-group'>
-                  <li v-for="option in poll.options"
+                  <li v-for="(option, index) in poll.options"
+                      :key="index"
                       :id="`option-${option.answer_id}`"
                       :class='option.active ? "list-group-item active" : "list-group-item"'
                       @click="pollVote(option,poll.poll_id)">
@@ -31,9 +32,12 @@
               </td>
               <td>Totals
                 <ul class='list-group'>
-                  <li v-for="option in poll.options"
+                  <li v-for="(option, index) in poll.options"
+                      :key="index"
                       :id="`option-${option.answer_id}`"
-                      :class='option.most_votes ? "list-group-item list-group-item-success" : "list-group-item"'>
+                      :class='option.most_votes
+                        ? "list-group-item list-group-item-success"
+                        : "list-group-item"'>
                     {{ option.votes.length }}
                   </li>
                 </ul>
@@ -158,7 +162,7 @@ export default {
           this.getPolls();
         });
     },
-    pollVote(option, pollId,el) {
+    pollVote(option, pollId) {
       const path = `http://localhost:5000/poll/${pollId}/?answer_id=${option.answer_id}`;
       this.isActive = true;
       axios.post(path, option)
@@ -173,10 +177,10 @@ export default {
           this.getPolls();
         });
     },
-    pollDetail(poll){
-      this.details.title = poll.question + ' Vote Details';
+    pollDetail(poll) {
+      this.details.title = `${poll.question} Vote Details`;
       this.details.voters = poll.options.map(option => {
-        var opt = {
+        const opt = {
           answer: option.answer,
           votes: option.votes,
         };
@@ -201,6 +205,7 @@ export default {
     onSubmit(evt) {
       evt.preventDefault();
       this.$refs.addPollModal.hide();
+      this.addAnswer();
       const payload = {
         question: this.addPollForm.question,
         answers: this.addPollForm.answers.map(a => a.answer),
