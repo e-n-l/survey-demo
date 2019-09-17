@@ -1,0 +1,211 @@
+openapi: 3.0.1
+info:
+  title: Polls
+  description: A simple poll creator
+  version: "0.02"
+servers:
+- url: /
+paths:
+  /create:
+    post:
+      summary: create a poll
+      description: create polls using this endpoint.
+      operationId: create_poll
+      parameters:
+      - name: question
+        in: query
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Poll Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Poll'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+      x-openapi-router-controller: swagger_server.controllers.default_controller
+  /create/{poll_id}/answer:
+    post:
+      summary: add a new answer
+      operationId: create_answer
+      parameters:
+      - name: poll_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      - name: answer
+        in: query
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Answer Option Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PollAnswer'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+      x-openapi-router-controller: swagger_server.controllers.default_controller
+  /polls:
+    get:
+      summary: display all available polls
+      operationId: polls_get
+      responses:
+        200:
+          description: Polls are available
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Polls'
+      x-openapi-router-controller: swagger_server.controllers.default_controller
+  /poll/{poll_id}/:
+    get:
+      operationId: get_poll
+      parameters:
+      - name: poll_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        200:
+          description: access a poll
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Poll'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+      x-openapi-router-controller: swagger_server.controllers.default_controller
+    post:
+      summary: submit answers to poll questions
+      operationId: create_vote
+      parameters:
+      - name: poll_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      - name: answer_id
+        in: query
+        required: true
+        style: form
+        explode: false
+        schema:
+          type: integer
+      responses:
+        200:
+          description: vote recorded
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+      x-openapi-router-controller: swagger_server.controllers.default_controller
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        user_agent:
+          type: string
+        ip_addr:
+          type: string
+      example:
+        user_id: 1
+        ip_addr: ip_addr
+        user_agent: user_agent
+    Poll:
+      required:
+      - question
+      - user_id
+      type: object
+      properties:
+        question:
+          type: string
+        poll_id:
+          type: integer
+        user_id:
+          type: integer
+        editable:
+          type: boolean
+        voted:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/PollAnswer'
+    Polls:
+      type: array
+      items:
+        $ref: '#/components/schemas/Poll'
+    PollAnswer:
+      required:
+      - poll_id
+      type: object
+      properties:
+        poll_id:
+          type: integer
+        answer_id:
+          type: integer
+        answer:
+          type: string
+    PollVote:
+      required:
+      - answer
+      - poll_id
+      - voter
+      type: object
+      properties:
+        poll_id:
+          type: integer
+        voter:
+          $ref: '#/components/schemas/User'
+        answer:
+          $ref: '#/components/schemas/PollAnswer'
+    ErrorModel:
+      required:
+      - code
+      - message
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          maximum: 600
+          minimum: 100
+          type: integer
+
